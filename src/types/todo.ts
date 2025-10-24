@@ -3,7 +3,7 @@ export interface TodoDetail {
   title: string;
   description?: string;
   completed: boolean;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
   userId?: number;
 }
