@@ -1,24 +1,10 @@
 <template>
-  <div class="flex flex-col space-y-1 w-full">
-    <label v-if="label" class="text-gray-300 font-medium">{{ label }}</label>
-    <select
-      v-bind="$attrs"
-      :value="modelValue"
-      @change="
-        $emit('update:modelValue', ($event.target as HTMLSelectElement).value)
-      "
-      class="px-4 py-2 rounded-lg bg-gray-800 text-gray-100 border border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition w-full"
-    >
-      <option
-        v-for="option in options"
-        :key="option.value"
-        :value="option.value"
-      >
-        {{ option.label }}
-      </option>
-    </select>
-    <p v-if="error" class="text-sm text-red-500 mt-1">{{ error }}</p>
-  </div>
+  <select
+    class="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-900 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    v-bind="$attrs"
+  >
+    <slot />
+  </select>
 </template>
 
 <script setup lang="ts">

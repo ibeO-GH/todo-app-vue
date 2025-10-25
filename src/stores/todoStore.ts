@@ -1,15 +1,25 @@
 import { defineStore } from "pinia";
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { db } from "@/db/todoDb";
 import type { Todo } from "@/types/todo";
 
 export const useTodoStore = defineStore("todoStore", () => {
   const todos = ref<Todo[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
-  onMounted(async () => {
-    const all = await db.todos.toArray();
-    todos.value = all;
-  });
+  async function loadTodos() {
+    try {
+      loading.value = true;
+      const all = await db.todos.toArray();
+      todos.value = all.reverse();
+    } catch (err) {
+      error.value = "Failed to load todos.";
+      console.error(err);
+    } finally {
+      loading.value = false;
+    }
+  }
 
   async function addTodo(title: string) {
     const newTodo: Todo = {
@@ -34,5 +44,5 @@ export const useTodoStore = defineStore("todoStore", () => {
     }
   }
 
-  return { todos, addTodo, deleteTodo, toggleTodo };
+  return { todos, loading, error, loadTodos, addTodo, deleteTodo, toggleTodo };
 });
