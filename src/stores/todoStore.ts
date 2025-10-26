@@ -44,5 +44,23 @@ export const useTodoStore = defineStore("todoStore", () => {
     }
   }
 
-  return { todos, loading, error, loadTodos, addTodo, deleteTodo, toggleTodo };
+  async function updateTodo(id: number, updatedData: Partial<Todo>) {
+    const index = todos.value.findIndex((t) => t.id === id);
+    if (index !== -1) {
+      const updatedTodo = { ...todos.value[index], ...updatedData };
+      todos.value[index] = updatedTodo;
+      await db.todos.put(updatedTodo);
+    }
+  }
+
+  return {
+    todos,
+    loading,
+    error,
+    loadTodos,
+    addTodo,
+    deleteTodo,
+    toggleTodo,
+    updateTodo,
+  };
 });
