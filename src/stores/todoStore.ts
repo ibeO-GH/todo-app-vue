@@ -44,12 +44,17 @@ export const useTodoStore = defineStore("todoStore", () => {
     }
   }
 
-  async function updateTodo(id: number, updatedData: Partial<Todo>) {
-    const index = todos.value.findIndex((t) => t.id === id);
+  async function updateTodo(updatedTodo: Partial<Todo> & { id: number }) {
+    const index = todos.value.findIndex((t) => t.id === updatedTodo.id);
     if (index !== -1) {
-      const updatedTodo = { ...todos.value[index], ...updatedData };
-      todos.value[index] = updatedTodo;
-      await db.todos.put(updatedTodo);
+      const existing = todos.value[index];
+      const merged: Todo = {
+        ...existing,
+        ...updatedTodo,
+        id: existing.id, // ensure id stays valid
+      };
+      todos.value[index] = merged;
+      await db.todos.put(merged);
     }
   }
 
