@@ -149,7 +149,7 @@ function startEdit(todo: Todo) {
 
 async function saveEdit() {
   if (editingTodo.value) {
-    await store.updateTodo(editingTodo.value.id, editingTodo.value);
+    await store.updateTodo(editingTodo.value);
     editingTodo.value = null;
   }
 }
