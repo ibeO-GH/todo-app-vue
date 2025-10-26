@@ -15,7 +15,7 @@ export default {
         "2xl": "1.25rem",
       },
       boxShadow: {
-        card: "0 4px 20px rgba(0,0,0,0.25)",
+        card: "0 4px 20px rgba(0,0,0,0.2)",
       },
     },
   },
