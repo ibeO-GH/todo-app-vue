@@ -2,16 +2,21 @@
   <section
     class="w-full max-w-4xl mx-auto mt-10 p-6 rounded-2xl shadow-card bg-slate-800/70 backdrop-blur-md"
   >
-    <!-- Header Row -->
-    <div class="flex flex-wrap gap-3 items-center justify-between mb-6">
-      <UiInput
-        v-model="searchTerm"
-        placeholder="Search todos..."
-        class="flex-1"
-      />
-
-      <!-- Fixed: Added `options` prop -->
-      <UiSelect v-model="filterStatus" :options="filterOptions" class="w-48" />
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6"
+    >
+      <div class="flex flex-1 items-center gap-3">
+        <UiInput
+          v-model="searchTerm"
+          placeholder="Search todos..."
+          class="flex-1"
+        />
+        <UiSelect
+          v-model="filterStatus"
+          :options="filterOptions"
+          class="w-48"
+        />
+      </div>
 
       <UiButton
         @click="toggleAddForm"
@@ -23,19 +28,18 @@
       </UiButton>
     </div>
 
-    <!-- Inline Add Todo Form -->
-    <div v-if="showAddForm" class="bg-gray-900 p-5 rounded-xl mb-6">
-      <label class="block mb-2 text-sm font-medium text-gray-300">Title</label>
+    <div v-if="showAddForm" class="bg-gray-900 p-4 rounded-xl mb-6">
+      <label class="block mb-2 text-sm font-medium text-gray-300"
+        >New Todo</label
+      >
       <UiInput v-model="newTodoTitle" placeholder="Enter todo title..." />
-
       <div class="flex gap-3 mt-4">
-        <UiButton variant="primary" @click="saveNewTodo">Add</UiButton>
+        <UiButton variant="primary" @click="saveNewTodo">Save</UiButton>
         <UiButton variant="secondary" @click="toggleAddForm">Cancel</UiButton>
       </div>
     </div>
 
-    <!-- Todo List -->
-    <div v-if="filteredTodos.length > 0" class="space-y-5">
+    <div v-if="filteredTodos.length" class="space-y-5">
       <div
         v-for="todo in filteredTodos"
         :key="todo.id"
@@ -63,14 +67,13 @@
           </div>
         </div>
 
-        <!-- Inline Edit Form -->
         <div
           v-if="editingTodo?.id === todo.id"
           class="bg-gray-900 p-4 rounded-xl"
         >
-          <label class="block mb-2 text-sm font-medium text-gray-300">
-            Title
-          </label>
+          <label class="block mb-2 text-sm font-medium text-gray-300"
+            >Title</label
+          >
           <UiInput v-model="editingTodo.title" />
 
           <div class="flex items-center gap-2 mt-3">
@@ -95,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useTodoStore } from "@/stores/todoStore";
 import UiButton from "@/components/ui/Button.vue";
 import UiInput from "@/components/ui/Input.vue";
@@ -110,7 +113,6 @@ const editingTodo = ref<Todo | null>(null);
 const showAddForm = ref(false);
 const newTodoTitle = ref("");
 
-// Select options for filtering
 const filterOptions = [
   { value: "all", label: "All" },
   { value: "completed", label: "Completed" },
@@ -130,19 +132,22 @@ const filteredTodos = computed(() => {
   });
 });
 
-// Inline Add Todo logic
+onMounted(async () => {
+  await store.loadTodos();
+});
+
 function toggleAddForm() {
   showAddForm.value = !showAddForm.value;
 }
 
 async function saveNewTodo() {
-  if (!newTodoTitle.value.trim()) return;
-  await store.addTodo(newTodoTitle.value.trim());
+  const title = newTodoTitle.value.trim();
+  if (!title) return;
+  await store.addTodo(title);
   newTodoTitle.value = "";
   showAddForm.value = false;
 }
 
-// Edit Todo logic
 function startEdit(todo: Todo) {
   editingTodo.value = { ...todo };
 }
@@ -158,7 +163,6 @@ function cancelEdit() {
   editingTodo.value = null;
 }
 
-// Delete
 async function remove(id: number) {
   if (confirm("Are you sure you want to delete this todo?")) {
     await store.deleteTodo(id);

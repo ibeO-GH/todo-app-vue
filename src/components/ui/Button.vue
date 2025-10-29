@@ -1,22 +1,27 @@
 <template>
-  <button
-    :class="[
-      'px-4 py-2 font-medium rounded-lg transition-colors',
-      variant === 'primary' && 'bg-blue-600 hover:bg-blue-700 text-white',
-      variant === 'secondary' && 'bg-gray-700 hover:bg-gray-600 text-white',
-      variant === 'danger' && 'bg-red-600 hover:bg-red-700 text-white',
-    ]"
-    v-bind="$attrs"
-  >
+  <button :class="btnClass" v-bind="$attrs" @click="$emit('click', $event)">
     <slot />
   </button>
 </template>
 
 <script setup lang="ts">
-defineProps({
+import { computed } from "vue";
+
+const props = defineProps({
   variant: {
-    type: String,
+    type: String as () => "primary" | "secondary" | "success" | "danger",
     default: "primary",
   },
 });
+
+const btnClass = computed(() => {
+  const base = "px-4 py-2 rounded-md font-semibold shadow-sm";
+  if (props.variant === "primary") return base + " bg-blue-600 text-white";
+  if (props.variant === "secondary") return base + " bg-gray-600 text-white";
+  if (props.variant === "success") return base + " bg-green-600 text-white";
+  if (props.variant === "danger") return base + " bg-red-600 text-white";
+  return base;
+});
+
+defineEmits(["click"]);
 </script>

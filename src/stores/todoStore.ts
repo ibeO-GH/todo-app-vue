@@ -3,21 +3,24 @@ import { ref } from "vue";
 import { db } from "@/db/todoDb";
 import type { Todo } from "@/types/todo";
 
-export const useTodoStore = defineStore("todoStore", () => {
+export const useTodoStore = defineStore("todo", () => {
   const todos = ref<Todo[]>([]);
-  const loading = ref(false);
-  const error = ref<string | null>(null);
 
   async function loadTodos() {
     try {
-      loading.value = true;
-      const all = await db.todos.toArray();
-      todos.value = all.reverse();
+      const local = await db.todos.toArray();
+      if (local.length > 0) {
+        todos.value = local;
+      } else {
+        const response = await fetch(
+          "https://jsonplaceholder.typicode.com/todos?_limit=10"
+        );
+        const data: Todo[] = await response.json();
+        todos.value = data;
+        await db.todos.bulkPut(data);
+      }
     } catch (err) {
-      error.value = "Failed to load todos.";
-      console.error(err);
-    } finally {
-      loading.value = false;
+      console.error("Failed to load todos:", err);
     }
   }
 
@@ -26,9 +29,19 @@ export const useTodoStore = defineStore("todoStore", () => {
       id: Date.now(),
       title,
       completed: false,
+      userId: 1,
     };
     await db.todos.add(newTodo);
-    todos.value.unshift(newTodo);
+    todos.value = [newTodo, ...todos.value]; // reassign to trigger reactivity
+  }
+
+  async function updateTodo(updated: Todo) {
+    const index = todos.value.findIndex((t) => t.id === updated.id);
+    if (index !== -1) {
+      todos.value[index] = { ...updated };
+      await db.todos.put(todos.value[index]);
+      todos.value = [...todos.value]; // refresh array
+    }
   }
 
   async function deleteTodo(id: number) {
@@ -36,44 +49,5 @@ export const useTodoStore = defineStore("todoStore", () => {
     todos.value = todos.value.filter((t) => t.id !== id);
   }
 
-  async function toggleTodo(id: number) {
-    const todo = todos.value.find((t) => t.id === id);
-    if (todo) {
-      todo.completed = !todo.completed;
-      await db.todos.put(todo);
-    }
-  }
-
-  async function updateTodo(updatedTodo: {
-    id: number;
-    title: string;
-    completed: boolean;
-  }) {
-    const index = todos.value.findIndex((t) => t.id === updatedTodo.id);
-    if (index !== -1) {
-      const existing = todos.value[index];
-      if (!existing) return;
-
-      const merged: Todo = {
-        id: existing.id,
-        title: updatedTodo.title ?? existing.title,
-        completed: updatedTodo.completed ?? existing.completed,
-        userId: existing.userId,
-      };
-
-      todos.value[index] = merged;
-      await db.todos.put(merged);
-    }
-  }
-
-  return {
-    todos,
-    loading,
-    error,
-    loadTodos,
-    addTodo,
-    deleteTodo,
-    toggleTodo,
-    updateTodo,
-  };
+  return { todos, loadTodos, addTodo, updateTodo, deleteTodo };
 });
